@@ -1,120 +1,74 @@
-Consultas:
+# Biblioteca Campus · MySQL
 
-USE biblioteca_campus;
+Base de datos relacional en MySQL para una biblioteca: libros, autores, ediciones, miembros y préstamos, con 20 consultas SQL de ejemplo.
 
--- CONSULTA 1: Listar todos los libros disponibles
-SELECT *
-FROM libro
-WHERE disponibilidad = TRUE;
+![MySQL](https://img.shields.io/badge/MySQL-4479A1?logo=mysql&logoColor=white)
+![SQL](https://img.shields.io/badge/SQL-DDL%20%2B%20DML-blue)
+![Modelado](https://img.shields.io/badge/Modelo-ER%20l%C3%B3gico%20y%20f%C3%ADsico-informational)
 
--- CONSULTA 2: Buscar libros por género
-SELECT *
-FROM libro
-WHERE genero = 'Fantasia';
+> Examen final de la habilidad de bases de datos MySQL (Campuslands).
 
--- CONSULTA 3: Obtener información de un libro por ISBN
-SELECT *
-FROM libro
-WHERE isbn = '9781234567890';
+## Qué resuelve
 
--- CONSULTA 4: Contar el número de libros en la biblioteca
-SELECT COUNT(*) AS total_libros
-FROM libro;
+Registra el catálogo de la biblioteca (libros con sus autores y ediciones), los miembros y el historial de préstamos y devoluciones, y permite consultar disponibilidad, historial y última edición de cada libro.
 
--- CONSULTA 5: Listar todos los autores
-SELECT *
-FROM autor;
+## Modelo de datos
 
--- CONSULTA 6: Buscar autores por nombre
-SELECT *
-FROM autor
-WHERE nombre LIKE '%Juan%';
+Seis tablas en la base `biblioteca_campus`:
 
--- CONSULTA 7: Obtener todos los libros de un autor específico
-SELECT L.*
-FROM libro L
-INNER JOIN LibroAutor LA
-    ON L.id_libro = LA.id_libro
-INNER JOIN autor A
-    ON A.id_autor = LA.id_autor
-WHERE A.id_autor = 1;
+| Tabla | Descripción |
+| --- | --- |
+| `libro` | Título, género, ISBN y disponibilidad |
+| `autor` | Autores |
+| `LibroAutor` | Relación muchos a muchos entre libros y autores (PK compuesta) |
+| `Publicacion` | Ediciones de un libro: número de edición, fecha y editor |
+| `Miembro` | Miembros de la biblioteca |
+| `Transaccion` | Préstamos y devoluciones (`fecha_devolucion` nula = préstamo vigente) |
 
--- CONSULTA 8: Listar todas las ediciones de un libro
-SELECT *
-FROM Publicacion
-WHERE id_libro = 1;
+### Diagramas
 
--- CONSULTA 9: Obtener la última edición de un libro
-SELECT *
-FROM Publicacion
-WHERE id_libro = 1
-ORDER BY edicion DESC
-LIMIT 1;
+Entidad-relación:
 
--- CONSULTA 10: Contar cuántas ediciones hay de un libro específico
-SELECT COUNT(*) AS total_ediciones
-FROM Publicacion
-WHERE id_libro = 1;
+![Diagrama ER](diagrams/Erm.png)
 
--- CONSULTA 11: Listar todas las transacciones de préstamo
-SELECT *
-FROM Transaccion;
+Modelo físico:
 
--- CONSULTA 12: Obtener los libros prestados actualmente
-SELECT DISTINCT L.*
-FROM libro L
-INNER JOIN Transaccion T
-    ON L.id_libro = T.id_libro
-WHERE T.fecha_devolucion IS NULL;
+![Diagrama físico](diagrams/diagrama_fisico.png)
 
--- CONSULTA 13: Contar el número de transacciones de un miembro específico
-SELECT COUNT(*) AS total_transacciones
-FROM Transaccion
-WHERE id_miembro = 1;
+Modelo lógico: [`diagramaLogic.png`](diagrams/diagrama_logico.png/diagramaLogic.png) y [`diagrama_logic.png`](diagrams/diagrama_logico.png/diagrama_logic.png).
 
--- CONSULTA 14: Listar todos los miembros de la biblioteca
-SELECT *
-FROM Miembro;
+## Consultas incluidas
 
--- CONSULTA 15: Buscar un miembro por nombre
-SELECT *
-FROM Miembro
-WHERE nombre LIKE '%Carlos%';
+`mysql/db.sql` trae, además del esquema, 20 consultas comentadas: libros disponibles, búsqueda por género o ISBN, conteos, libros por autor (`JOIN` con `LibroAutor`), ediciones y última edición de un libro (subconsulta con `MAX`), préstamos vigentes, historial por miembro y por libro, y un listado de libros con su última edición y disponibilidad.
 
--- CONSULTA 16: Obtener las transacciones de un miembro específico
-SELECT *
-FROM Transaccion
-WHERE id_miembro = 1;
+## Estructura
 
--- CONSULTA 17: Listar todos los libros y sus autores
-SELECT
-    L.titulo,
-    A.nombre
-FROM libro L
-INNER JOIN LibroAutor LA
-    ON L.id_libro = LA.id_libro
-INNER JOIN autor A
-    ON A.id_autor = LA.id_autor;
+```text
+├── mysql/
+│   ├── db.sql       # CREATE DATABASE, tablas y las 20 consultas
+│   └── insert.sql   # datos de ejemplo
+└── diagrams/        # ER, modelo lógico y físico
+```
 
--- CONSULTA 18: Obtener el historial de préstamos de un libro específico
-SELECT *
-FROM Transaccion
-WHERE id_libro = 1;
+## Requisitos
 
--- CONSULTA 19: Contar cuántos libros han sido prestados en total
-SELECT COUNT(*) AS total_prestamos
-FROM Transaccion;
+MySQL 8 (o compatible) y un cliente: consola `mysql`, MySQL Workbench o similar.
 
--- CONSULTA 20: Listar todos los libros junto con su última edición y estado de disponibilidad
-SELECT
-    L.titulo,
-    P.edicion,
-    L.disponibilidad
-FROM libro L
-INNER JOIN Publicacion P
-    ON L.id_libro = P.id_libro
-WHERE P.edicion = (
-    SELECT MAX(P2.edicion)
-    FROM Publicacion P2
-    WHERE P2.id_libro = L.id_libro
-);# Examen_Biblioteca_Campus_DB_CruzBola-os_EduardoAntonio
+## Instalación y ejecución
+
+```bash
+git clone https://github.com/TOTO05-a/biblioteca-campus-mysql.git
+cd biblioteca-campus-mysql
+mysql -u <usuario> -p < mysql/db.sql
+mysql -u <usuario> -p < mysql/insert.sql
+```
+
+`db.sql` crea la base y las tablas y luego ejecuta las consultas; `insert.sql` carga los datos de ejemplo (si quieres ver resultados en las consultas, cárgalo antes de ejecutar la sección de consultas, o corre las consultas por separado).
+
+## Variables de entorno
+
+No aplica: es un proyecto de scripts SQL, no hay `.env`.
+
+## Autor
+
+**Eduardo Antonio Cruz Bolaños** — [@TOTO05-a](https://github.com/TOTO05-a)
